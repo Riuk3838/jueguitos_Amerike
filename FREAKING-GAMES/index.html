@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proyecto - Amerike Edomex</title>
+  
+  <!-- Tipografía Moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: #0b0a0e;
+      color: #ffffff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      width: 100vw;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Navegación fija superior */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 24px;
+      background-color: rgba(11, 10, 14, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(217, 70, 239, 0.25);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      width: 100%;
+    }
+
+    .nav-btn {
+      flex: 1;
+      max-width: 320px;
+      padding: 14px 20px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: center;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.03);
+      color: #ffffff;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+    }
+
+    .nav-btn:hover {
+      background: rgba(217, 70, 239, 0.12);
+      border-color: #d946ef;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(217, 70, 239, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .nav-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* Botón de URL / Enlace exterior */
+    .btn-url {
+      display: inline-block;
+      padding: 14px 28px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #ffffff;
+      background: linear-gradient(135deg, #d946ef 0%, #9333ea 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(217, 70, 239, 0.4);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      margin: 10px 0;
+    }
+
+    .btn-url:hover {
+      background: linear-gradient(135deg, #e879f9 0%, #a855f7 100%);
+      box-shadow: 0 6px 25px rgba(217, 70, 239, 0.65);
+      transform: translateY(-3px);
+      color: #ffffff;
+    }
+
+    .btn-url:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 10px rgba(217, 70, 239, 0.3);
+    }
+
+    .content-area {
+      padding: 40px 24px;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section {
+      min-height: 85vh;
+      padding-top: 60px;
+      scroll-margin-top: 100px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(217, 70, 239, 0.15);
+      border: 1px solid rgba(217, 70, 239, 0.35);
+      color: #f0abfc;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #ffffff 40%, #e879f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .section p {
+      font-size: 15px;
+      line-height: 1.8;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+      max-width: 850px;
+    }
+
+    .img-logo {
+      max-width: 280px;
+      height: auto;
+      display: block;
+      margin: 24px 0;
+      border-radius: 12px;
+      border: 1px solid rgba(217, 70, 239, 0.3);
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .fin-text {
+      margin-top: 40px;
+      font-weight: 700;
+      color: #f0abfc;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px rgba(217, 70, 239, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navegación superior -->
+  <nav class="navbar">
+    <button class="nav-btn" data-target="seccion-juegos-nombre">FREAKING-GAMES</button>
+    <button class="nav-btn" data-target="seccion-desarrolladores">DESARROLLADORES</button>
+    <button class="nav-btn" data-target="seccion-juegos">JUEGOS</button>
+  </nav>
+
+  <!-- Contenido principal -->
+  <main class="content-area">
+
+    <section id="seccion-juegos-nombre" class="section">
+      <span class="badge">NUESTRO PROYECTO</span>
+      <br>
+      <h2>FREAKING-GAMES</h2>
+      <p>
+        En esta página web encontrarás una cuidada selección de videojuegos desarrollados por grupos independientes a lo largo de un semestre académico en la universidad Amerike Edomex. Esta plataforma nace como un espacio dedicado a visibilizar el talento emergente de los desarrolladores, destacando la pasión, dedicación y el gran esfuerzo técnico vertido en cada uno de estos proyectos.
+      </p>
+      <p>
+        A través de las distintas secciones, los mismos creadores nos contarán de primera mano cómo vivieron el proceso de adaptación desde las primeras ideas esbozadas en papel hasta su ejecución final en pantalla. Descubrirás la evolución de sus conceptos, los ajustes en las mecánicas de juego que debieron realizar durante la producción y los principales objetivos técnicos y creativos alcanzados por cada equipo.
+      </p>
+      <p>
+        Por último, encontrarás una descripción detallada sobre los distintos géneros y estilos de juego, el trasfondo de sus historias y mecánicas principales, así como guías e instrucciones claras sobre cómo jugarlos. Te invitamos a explorar el catálogo y disfrutar de las propuestas nacidas en nuestras aulas.
+      </p>
+    </section>
+
+    <section id="seccion-desarrolladores" class="section">
+      <span class="badge">ESTUDIO</span>
+      <br>
+      <h2>DESARROLLADORES Y EQUIPOS</h2>
+      
+      <!-- LOGO INTEGRADO -->
+      <img src="img/RockLeek-logo.png" alt="Logo RockLeek Studio" class="img-logo">
+
+      <p><strong>MAKE IT AGAIN BRO! - Rockleek Studios</strong></p>
+      <p>¡El futuro llegó demasiado pronto!</p>
+      <p>
+        En este juego de ritmo, acompañarás a El Mimao, un artista de 2026 que despierta inesperadamente en 1986. Sin dinero y en una época donde su música es completamente desconocida, tendrá que abrirse camino desde las calles hasta los escenarios más grandes.
+      </p>
+      <p>
+        Viaja por distintas épocas y ciudades, desde Los Ángeles hasta Miami y Knebworth, supera desafíos musicales, sigue el ritmo y demuestra que tu música puede conquistar cualquier generación.
+      </p>
+      <p>¿Podrás convertirte en el artista número uno de la época?</p>
+      <p><strong>¡El escenario es tuyo!</strong></p>
+    </section>
+
+    <section id="seccion-juegos" class="section">
+      <span class="badge">CATÁLOGO</span>
+      <br>
+      <h2>JUEGOS</h2>
+      <p>Biblioteca de FREAKING GAMES</p>
+      
+      <a href="https://youtu.be/dQw4w9WgXcQ?si=1DALbe4afAXchjdf" target="_blank" class="btn-url">
+        🎮 JUEGO X
+      </a>
+
+      <p class="fin-text">FIN</p>
+    </section>
+
+  </main>
+
+  <!-- Desplazamiento interactivo -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const navButtons = document.querySelectorAll('.nav-btn');
+
+      navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const targetId = button.getAttribute('data-target');
+          const targetSection = document.getElementById(targetId);
+
+          if (targetSection) {
+            targetSection.scrollIntoView({
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
