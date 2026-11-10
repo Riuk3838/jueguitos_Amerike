@@ -1,0 +1,1265 @@
+﻿/* ==========================================================================
+   Estilos del juego de ritmo.
+   Orden: base · barra superior · pantalla de inicio · opciones y leaderboard ·
+          zona de juego · escenario y notas · HUD inferior · celular.
+   Los colores principales se cambian en :root.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Variables y base
+   -------------------------------------------------------------------------- */
+
+/* Paleta de colores de toda la interfaz. */
+
+@font-face {
+  font-family: 'Neon1';
+  src: url('fonts/Neon1.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neon2';
+  src: url('fonts/Neon2.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neon3';
+  src: url('fonts/Neon3.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neon4';
+  src: url('fonts/Neon4.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #090914;
+  --panel: #171724;
+  --text: #f7f4ff;
+  --muted: #aaa7bd;
+  --pink: #ff4db8;
+  --cyan: #50e7f2;
+  --gold: #ffd65a;
+  --purple: #8b5cff;
+}
+
+* { box-sizing: border-box; }
+
+/* Fondo de concierto: fondo-concierto.png debe estar junto a este archivo. */
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow-x: hidden;
+  color: var(--text);
+  font: 15px Arial, sans-serif;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(#0909149c, #090914b8),
+    url("fondo-concierto.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+/* Botones y selectores heredan la fuente de la página. */
+button, select { font: inherit; }
+
+/* --------------------------------------------------------------------------
+   Marco de referencia fijo.
+   El juego se maqueta siempre dentro de 1920x1080. menu.js calcula la escala
+   (min(ancho/1920, alto/1080)) y la aplica aquí; el resto del viewport queda
+   como espacio libre (bandas) cuando la relación de aspecto no es 16:9.
+   Las unidades cqw/cqh son relativas a este marco, no al monitor.
+   -------------------------------------------------------------------------- */
+.game-viewport {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #05040a;
+}
+
+.game-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  container-type: size;
+  transform: translate(-50%, -50%) scale(var(--game-scale, 1));
+  transform-origin: center center;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(#0909149c, #090914b8),
+    url("fondo-concierto.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Intro inicial: una capa negra cubre la página hasta terminar el fade del logo. */
+.game-intro {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+}
+.game-intro[hidden] { display: none; }
+.game-intro-logo {
+  display: block;
+  width: min(72cqw, 640px);
+  max-height: 72cqh;
+  object-fit: contain;
+  opacity: 0;
+  animation: game-intro-fade 3s ease-in-out forwards;
+}
+@keyframes game-intro-fade {
+  0% { opacity: 0; }
+  33.333% { opacity: 1; }
+  66.667% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Contenedor central de la página. */
+.app { width: min(100% - 32px, 1200px); margin: 0 auto; padding: 18px 0 14px; }
+
+/* Oculta un elemento a la vista pero lo deja disponible para lectores de pantalla. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   2. Barra superior
+   -------------------------------------------------------------------------- */
+
+/* Franja con la marca y el título. */
+.topbar {
+  min-height: 54px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid #4a315866;
+}
+.brand {
+  flex: 0 0 auto;
+  color: white;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+.brand span { color: var(--pink); margin-left: 5px; }
+.page-title {
+  margin: 0;
+  color: #f5edff;
+  text-align: center;
+  font-size: clamp(16px, 2.6cqw, 25px);
+  letter-spacing: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Pantalla de inicio (menú, créditos e introducción de historia)
+   -------------------------------------------------------------------------- */
+
+/* Pantalla completa de fondo pixelado; se oculta al empezar a jugar. */
+.start-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f8efff;
+  background-color: #12142d;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 14px, #57e7f20d 15px 16px),
+    repeating-linear-gradient(90deg, transparent 0 14px, #57e7f20d 15px 16px),
+    radial-gradient(ellipse at 18% 80%, #ff4db830, transparent 37%),
+    radial-gradient(ellipse at 86% 30%, #5a42bc66, transparent 42%),
+    linear-gradient(145deg, #151432, #10182f 55%, #221638);
+}
+/* Cuadritos de colores decorativos (estilo pixel art). */
+.start-screen::before {
+  position: absolute;
+  z-index: -1;
+  inset: -20%;
+  content: "";
+  opacity: .8;
+  background:
+    linear-gradient(#ff4db8 0 0) 18% 22% / 20px 20px no-repeat,
+    linear-gradient(#ff4db8 0 0) 21% 18% / 20px 20px no-repeat,
+    linear-gradient(#50e7f2 0 0) 77% 38% / 16px 16px no-repeat,
+    linear-gradient(#50e7f2 0 0) 80% 35% / 16px 16px no-repeat,
+    linear-gradient(#8b5cff 0 0) 70% 72% / 24px 24px no-repeat,
+    linear-gradient(#8b5cff 0 0) 73% 68% / 24px 24px no-repeat,
+    linear-gradient(#ffd65a 0 0) 37% 87% / 16px 16px no-repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.start-screen[hidden] { display: none; }
+
+/* Barra de la canción del menú: va en la esquina superior derecha y solo aparece
+   cuando termina la intro.*/
+.menu-now-playing {
+  position: absolute;
+  z-index: 3;
+  top: clamp(16px, 3cqw, 28px);
+  right: clamp(16px, 3cqw, 28px);
+  display: grid;
+  gap: 7px;
+  width: min(300px, calc(100cqw - 32px));
+  padding: 10px 12px;
+  border-right: 3px solid var(--pink);
+  border-radius: 8px 0 0 8px;
+  background: linear-gradient(270deg, #151226f2, #100e1bd9);
+  box-shadow: 0 0 16px #0007, 0 0 10px #ff4db82e;
+  pointer-events: none;
+}
+.menu-now-playing[hidden] { display: none; }
+.menu-now-playing-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+.menu-now-playing-meta strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menu-now-playing-meta span {
+  flex: 0 0 auto;
+  color: var(--cyan);
+  font: 700 10px "Courier New", monospace;
+  letter-spacing: .5px;
+}
+.menu-now-playing .song-progress-bar { height: 7px; }
+
+/* Tarjeta base del menú principal y de los créditos. */
+.start-card {
+  position: relative;
+  z-index: 1;
+  width: min(620px, 100%);
+  padding: clamp(18px, 4cqw, 42px);
+  text-align: left;
+}
+.start-eyebrow { margin: 0 0 7px; color: #50e7f2; font-size: 12px; font-weight: 1000; letter-spacing: 3px; }
+
+/* Título de los créditos (h1) y del menú principal (h2), con borde y sombra de color. */
+.start-card h1 {
+  margin: 0 0 px;
+  color: #fff9e8;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(100px, 20cqw, 100px);
+  letter-spacing: 1px;
+  -webkit-text-stroke: 1px #171018;
+  text-shadow: 3px 4px 0 #171018, 5px 6px 0 #ca493f;
+}
+.start-card h2 {
+  margin: 0 0 50px;
+  color: #fff9e8;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(2px, 7.20cqw, 1px);
+  line-height: 1.08;
+  letter-spacing: 0px;
+  -webkit-text-stroke: 0px #171018;
+  text-shadow: 3px 4px 0 #171018, 5px 6px 0 #ca493f;
+}
+
+.credits-screen {
+  margin: 0 0 2px;
+  color: #fff9e8;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(100px, 20cqw, 100px);
+  letter-spacing: 1px;
+  -webkit-text-stroke: 1px #171018;
+  text-shadow: 3px 4px 0 #171018, 5px 6px 0 #ca493f;
+}
+
+/* Botones grandes del menú principal; se desplazan al pasar el cursor. */
+.start-menu-buttons { display: grid; justify-items: start; gap: 5px; }
+.start-menu-buttons button {
+  border: 0;
+  padding: 1px 8px 7px 0;
+  color: #fff;
+  background: transparent;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(35px, 6.2cqw, 50px);
+  line-height: .98;
+  letter-spacing: .5px;
+  text-align: left;
+  -webkit-text-stroke: 1.7px #090b18;
+  text-shadow: 2px 3px 0 #090b18;
+  cursor: pointer;
+  transition: transform .12s ease, color .12s ease;
+}
+
+.start-menu-buttons button:hover,
+.start-menu-buttons button:focus-visible {
+  transform: translateX(9px) rotate(-1deg);
+  outline: none;
+  color: #ff42bc;
+  text-shadow:
+    0 0 8px #ff2fae,
+    0 0 20px #ff2fae;
+}
+
+
+/* Botón "Reiniciar partida" fijo en la esquina inferior izquierda de la pantalla de inicio. */
+#resetButton.menu-reset-button {
+  position: absolute;
+  z-index: 2;
+  left: 24px;
+  bottom: 24px;
+  margin: 0;
+  padding: 9px 12px;
+  border: 2px solid var(--cyan);
+  color: var(--cyan);
+  background: #17152be8;
+  font: 900 13px "Courier New", monospace;
+  letter-spacing: 1px;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+#resetButton.menu-reset-button:hover,
+#resetButton.menu-reset-button:focus-visible { color: #101329; background: var(--cyan); }
+
+/* Panel de créditos y su botón de volver. */
+.credits-panel > p:not(.start-eyebrow) { margin: 10px 0; color: #dedaf2; font-weight: 700; }
+.credits-back {
+  margin-top: 16px;
+  padding: 9px 17px;
+  border: 2px solid #50e7f2;
+  color: #50e7f2;
+  background: #211831;
+  font-weight: 900;
+  cursor: pointer;
+}
+.credits-back:hover, .credits-back:focus-visible { color: #12142d; background: #50e7f2; outline: none; }
+
+/* Introducción del modo historia: el color del marco cambia según la escena (data-scene). */
+.story-intro {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(760px, 100%);
+  min-height: min(62cqh, 490px);
+  padding: clamp(25px, 6cqw, 66px);
+  overflow: hidden;
+  isolation: isolate;
+  border: 4px solid #50e7f2;
+  color: #fff5dc;
+  background-color: #12142d;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 15px, #50e7f20c 16px 17px),
+    repeating-linear-gradient(90deg, transparent 0 15px, #50e7f20c 16px 17px),
+    linear-gradient(145deg, #1c163b, #10182c 60%, #2b1743);
+  box-shadow: 8px 8px 0 #ff4db8, 14px 14px 0 #080a18;
+  text-align: center;
+}
+.story-intro[hidden] { display: none; }
+.story-intro[data-scene="1"] { border-color: #ff4db8; box-shadow: 8px 8px 0 #50e7f2, 14px 14px 0 #080a18; }
+.story-intro[data-scene="2"] { border-color: #ffd65a; box-shadow: 8px 8px 0 #8b5cff, 14px 14px 0 #080a18; }
+.story-scene-label { margin: 0 0 20px; color: #50e7f2; font: bold 13px "Courier New", monospace; letter-spacing: 3px; }
+.story-intro h2 {
+  margin: 0;
+  color: #fff5dc;
+  font: 900 clamp(30px, 6cqw, 58px)/1.08 Impact, "Arial Black", sans-serif;
+  text-shadow: 4px 4px #ff4db8, 7px 7px #080a18;
+}
+.story-intro > p:not(.story-scene-label) {
+  margin: 25px 0 28px;
+  color: #d8d5f7;
+  font: bold clamp(13px, 2cqw, 17px) "Courier New", monospace;
+}
+.story-skip {
+  padding: 9px 13px;
+  border: 2px solid #50e7f2;
+  color: #50e7f2;
+  background: #13132b;
+  font: bold 11px "Courier New", monospace;
+  cursor: pointer;
+}
+.story-skip:hover, .story-skip:focus-visible { color: #12142d; background: #50e7f2; outline: none; }
+
+/* --------------------------------------------------------------------------
+   4. Opciones y leaderboard
+   -------------------------------------------------------------------------- */
+
+/* Caja de opciones y leaderboard, con desplazamiento si no cabe en pantalla. */
+.settings-screen {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 100%);
+  max-height: min(90cqh, 820px);
+  overflow: auto;
+  padding: clamp(18px, 4cqw, 32px);
+  color: #f6edcf;
+  background: #211831;
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 9px #50e7f255, inset 0 0 14px #50e7f20c,
+    7px 8px 0 #fff, 12px 13px 0 #201326;
+  animation: options-panel-lights 3.8s ease-in-out infinite alternate;
+  font-family: "Courier New", monospace;
+}
+.settings-screen[hidden] { display: none; }
+@keyframes options-panel-lights {
+  from {
+    border-color: var(--cyan);
+    box-shadow: 0 0 8px #50e7f255, inset 0 0 14px #50e7f20c,
+      7px 8px 0 #fff, 12px 13px 0 #201326;
+  }
+  to {
+    border-color: var(--pink);
+    box-shadow: 0 0 18px #ff4db877, inset 0 0 18px #ff4db817,
+      7px 8px 0 #fff, 12px 13px 0 #201326;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings-screen { animation: none; }
+}
+
+/* Cabecera con el botón de volver y el título. */
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2cqw, 16px);
+  margin-bottom: 18px;
+  padding-bottom: 13px;
+  border-bottom: 2px dashed #f0b944;
+}
+.settings-header h2 {
+  min-width: 0;
+  margin: 0;
+  color: #51e0d0;
+  font-family: 'Neon4', Impact, sans-serif;
+  font-size: clamp(15px, 4cqw, 27px);
+  overflow-wrap: anywhere;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px #160e21;
+}
+.settings-back {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  border: 2px solid #f0b944;
+  color: #ffdf70;
+  background: #332342;
+  font: 11px 'Neon4', "Courier New", monospace;
+  letter-spacing: .6px;
+  cursor: pointer;
+}
+.settings-back:hover, .settings-back:focus-visible { color: #211831; background: #51e0d0; outline: none; }
+.settings-sub-back { margin-bottom: 12px; } /* botón "← OPCIONES" dentro de una sección */
+
+/* Colores propios de las opciones (anulan los estilos generales de más abajo). */
+.settings-content .key-settings { border-color: #e663b5; background: #2b203b; }
+.settings-content .key-settings strong { color: #51e0d0; }
+.settings-content .key-bind, .settings-content .difficulty { border-color: #bd77ae; background: #35263f; color: #fff6db; }
+.settings-content .default-keys { border-color: #f0b944; color: #ffdf70; }
+
+/* Menú de secciones (Audio, Dificultad, Canción y mapa, Controles) y sus páginas. */
+.options-menu { display: grid; gap: 9px; }
+.options-menu[hidden], .option-page[hidden] { display: none; }
+.options-menu button {
+  padding: 14px 16px;
+  border: 2px solid #bd77ae;
+  color: #fff6db;
+  background: #2b203b;
+  font: 18px 'Neon4', Impact, sans-serif;
+  letter-spacing: .8px;
+  text-shadow: 1px 1px #160e21, 0 0 8px #ff4db855;
+  text-align: left;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease,
+    transform .15s ease, box-shadow .15s ease;
+}
+.options-menu button:nth-child(1) { --option-accent: var(--cyan); }
+.options-menu button:nth-child(2) { --option-accent: var(--pink); }
+.options-menu button:nth-child(3) { --option-accent: var(--purple); }
+.options-menu button:nth-child(4) { --option-accent: var(--gold); }
+.options-menu button:hover, .options-menu button:focus-visible {
+  transform: translateX(7px) rotate(-.4deg);
+  border-color: var(--option-accent);
+  color: var(--option-accent);
+  background: color-mix(in srgb, var(--option-accent) 10%, #2b203b);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--option-accent) 48%, transparent);
+  outline: none;
+}
+.settings-group { margin: 14px 0; padding-bottom: 14px; border-bottom: 1px solid #4a4056; }
+.settings-group > h3 { margin: 0 0 10px; color: var(--cyan); font: 15px 'Neon3', 'Neon4', sans-serif; letter-spacing: 1px; }
+.settings-group .file-controls + .file-controls { margin-top: 14px; }
+
+/* Leaderboard: progreso guardado del jugador y lista de mejores partidas. */
+.profile-progress { margin-top: 16px; padding: 12px; border: 2px solid #b45d96; background: #191523; }
+.profile-progress h3 { margin: 0 0 9px; color: #51e0d0; font-size: 11px; letter-spacing: 1px; }
+.profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.profile-grid > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  color: #b8afc2;
+  font-size: 9px;
+}
+.profile-grid strong { color: #fff6db; font-size: 12px; font-variant-numeric: tabular-nums; }
+.leaderboard-list { display: grid; gap: 6px; margin: 12px 0 0; padding-left: 26px; color: var(--gold); }
+.leaderboard-list li { padding: 7px 8px; border: 1px solid #4a4056; color: #b8afc2; font-size: 10px; }
+.leaderboard-list li strong { color: #fff6db; font-size: 12px; }
+.leaderboard-empty { list-style: none; margin-left: -26px; }
+
+/* Volumen: deslizador y porcentaje.
+   Nota: .option-label (más abajo) también define display y gana a este flex. */
+.volume-label { display: flex; align-items: center; justify-content: space-between; }
+.volume-label output { color: var(--gold); font-size: 11px; letter-spacing: 0; }
+.volume-control { width: 100%; margin: 2px 0 8px; accent-color: var(--pink); cursor: pointer; }
+
+/* Etiquetas de campos y selector de dificultad. */
+.option-label, .file-label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.difficulty {
+  width: 100%;
+  padding: 10px;
+  background: #272633;
+  color: white;
+  border: 1px solid #60566a;
+}
+
+/* Carga de canción y mapa de notas (JSON). */
+.file-controls { display: grid; gap: 5px; }
+.file-label span { display: block; margin-top: 4px; color: var(--cyan); font-size: 11px; letter-spacing: 0; }
+.file-controls input { width: 100%; color: #ddd; font-size: 11px; }
+.song-file-name { overflow: hidden; color: #fff6db; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Reasignación de teclas; el botón en espera se resalta. */
+.key-settings {
+  margin-top: 18px;
+  padding: 12px;
+  background: #201c29;
+  border: 1px solid #4a4056;
+}
+.key-settings strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--cyan);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.key-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+  color: #c8c2d2;
+  font-size: 12px;
+}
+.key-bind {
+  min-width: 48px;
+  padding: 6px 10px;
+  border: 1px solid #62556e;
+  background: #302a3a;
+  color: white;
+  cursor: pointer;
+}
+.key-bind.waiting { border-color: var(--pink); background: #58264a; }
+.default-keys {
+  margin-top: 8px;
+  padding: 7px 9px;
+  background: transparent;
+  border: 1px solid #5c4a69;
+  color: var(--cyan);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   5. Zona de juego: contenedor, luces y marcador
+   -------------------------------------------------------------------------- */
+
+/* Contenedor de la pista; se amplía para ocupar casi toda la ventana. */
+.game-main {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  width: min(100%, 1100px);
+  height: calc(100cqh - 84px);
+  min-height: 420px;
+  margin: 12px auto 0;
+}
+
+/* Haces de luz difuminados detrás de la pista. */
+.concert-lights {
+  position: absolute;
+  z-index: 0;
+  top: 20px;
+  left: -18%;
+  right: -18%;
+  height: 34%;
+  pointer-events: none;
+  background:
+    linear-gradient(72deg, transparent 30%, #ff3c9f18 42%, transparent 55%),
+    linear-gradient(108deg, transparent 36%, #605cff20 49%, transparent 62%),
+    radial-gradient(ellipse at 50% 0, #fd4a9b35, transparent 68%);
+  filter: blur(7px);
+}
+
+/* Marcador oculto a la vista: solo guarda el mensaje de resultado para lectores de pantalla. */
+.scoreboard {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.feedback {
+  min-width: 150px;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: .8px;
+  text-align: left;
+}
+
+/* Estilos compartidos de puntos y combo. */
+.score-block, .combo-block { display: grid; gap: 3px; min-width: 90px; }
+.stat-label { color: #aaa4bd; font-size: 9px; letter-spacing: 1.2px; }
+.score-block strong, .combo-block strong {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Multiplicador de puntos: cambia de color según el nivel (data-tier). */
+.multiplier { color: var(--pink); font-size: 19px; text-shadow: 0 0 10px #ff4db877; }
+.multiplier[data-tier="2"] { color: var(--cyan); }
+.multiplier[data-tier="4"] { color: #b99cff; }
+.multiplier[data-tier="8"] { color: var(--gold); }
+
+/* Marco del escenario: su ancho sigue la altura útil para conservar una proporción cómoda. */
+.game-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, calc((100cqh - 190px) * 1.25));
+  /* La pista termina justo donde empieza el panel inferior; así su base
+     queda alineada con los bordes laterales del HUD y no pasa por detrás. */
+  height: calc(100% - var(--bottom-hud-height, 154px));
+  margin-inline: auto;
+  padding: 0;
+}
+
+/* --------------------------------------------------------------------------
+   6. Escenario, pista y notas
+   -------------------------------------------------------------------------- */
+
+/* Escenario: ocupa casi toda la altura de la ventana, con luces de colores. */
+.stage {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+  perspective: 1000px;
+  background: linear-gradient(#09091433, #07071044);
+}
+.stage[data-scenario="no-me-digas"] {
+  background: transparent;
+}
+body[data-scenario="no-me-digas"] .game-frame {
+  background-color: #100c20;
+  background-image: linear-gradient(#08081726, #08081738), url("ART/assets/escenario1.jpeg");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 100% 100%;
+}
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(74deg, transparent 21%, #fd478a27 34%, transparent 47%),
+    linear-gradient(106deg, transparent 36%, #624bff24 49%, transparent 62%),
+    radial-gradient(ellipse at 50% 6%, #ff8d552b, transparent 46%);
+  transition: background 900ms ease;
+}
+
+/* Cambia las luces y el color del fondo según la canción de la campaña. */
+.stage[data-scenario="no-me-digas"]::before {
+  background:
+    linear-gradient(72deg, transparent 18%, #22d9ff32 34%, transparent 49%),
+    linear-gradient(108deg, transparent 36%, #315cff30 51%, transparent 67%),
+    radial-gradient(ellipse at 50% 5%, #148ecb44, transparent 48%);
+}
+.stage[data-scenario="me-gustan"]::before {
+  background:
+    linear-gradient(72deg, transparent 17%, #ff4db83b 35%, transparent 50%),
+    linear-gradient(108deg, transparent 35%, #9b43ff35 51%, transparent 68%),
+    radial-gradient(ellipse at 50% 6%, #ec438d4a, transparent 49%);
+}
+.stage[data-scenario="hazlo-otra-vez"]::before {
+  background:
+    linear-gradient(72deg, transparent 16%, #ff704036 34%, transparent 49%),
+    linear-gradient(108deg, transparent 36%, #ffd65a32 52%, transparent 68%),
+    radial-gradient(ellipse at 50% 5%, #ffad3e50, transparent 49%);
+}
+
+/* Pista trapezoidal: angosta arriba y ancha abajo. */
+.highway {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  overflow: hidden;
+  clip-path: polygon(30% 40%, 70% 40%, 98% 100%, 2% 100%);
+  background: linear-gradient(180deg, #211c2d, #13121d 50%, #0d0c14);
+  filter: drop-shadow(0 0 14px #50e7f233);
+  transition: background 900ms ease, filter 900ms ease;
+}
+.stage[data-scenario="no-me-digas"] .highway {
+  background: linear-gradient(180deg, #102b48, #0d1a31 52%, #080d1a);
+}
+.stage[data-scenario="me-gustan"] .highway { background: linear-gradient(180deg, #351342, #1b1230 52%, #0c0a18); }
+.stage[data-scenario="hazlo-otra-vez"] .highway { background: linear-gradient(180deg, #422018, #251525 52%, #100d18); }
+.highway::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, #ffffff12, transparent 30%, #0005);
+}
+.lane-glow {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, #b57cff14, transparent 60%);
+}
+.stage[data-scenario="no-me-digas"] .lane-glow { background: linear-gradient(180deg, #4ddfff26, transparent 60%); }
+.stage[data-scenario="me-gustan"] .lane-glow { background: linear-gradient(180deg, #ff4db82a, transparent 62%); }
+.stage[data-scenario="hazlo-otra-vez"] .lane-glow { background: linear-gradient(180deg, #ffd65a26, transparent 62%); }
+
+/* Línea de golpe: aquí deben pulsarse las notas. */
+.hit-line {
+  position: absolute;
+  z-index: 3;
+  bottom: 176px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff4db8 8%, #ff4db8 92%, transparent);
+  box-shadow: 0 0 12px #ff4db8;
+}
+
+/* Receptores: flechas fijas, cada una con el color de su carril; se iluminan al pulsar. */
+.receptors {
+  position: absolute;
+  z-index: 4;
+  bottom: 156px;
+  /* A esta altura el trapecio ya se estrechó: los cuatro carriles ocupan
+     del 11.81% al 88.19% del ancho de la pista. */
+  left: 11.81%;
+  right: 11.81%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  justify-items: center;
+}
+.receptor {
+  width: clamp(29px, 6cqw, 42px);
+  height: clamp(29px, 6cqw, 42px);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--note-color);
+  border-radius: 7px;
+  color: var(--note-color);
+  background: #11101be8;
+  box-shadow: 0 0 13px color-mix(in srgb, var(--note-color) 55%, transparent);
+  transition: transform .08s, background .08s;
+  font-size: clamp(19px, 2.4cqw, 27px);
+  font-weight: 900;
+  line-height: 1;
+}
+.receptor[data-lane="0"] { --note-color: #50e7f2; }
+.receptor[data-lane="1"] { --note-color: #ff4db8; }
+.receptor[data-lane="2"] { --note-color: #a989ff; }
+.receptor[data-lane="3"] { --note-color: #ffd65a; }
+.receptor.active { transform: scale(1.12); background: var(--note-color); color: #17131a; }
+/* Tecla personalizada: letra más pequeña para que quepa en el receptor. */
+.receptor.custom-key span {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0 2px;
+  font-size: clamp(10px, 1.5cqw, 16px);
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+/* Capa donde JavaScript crea y mueve las notas. */
+.notes { position: absolute; z-index: 5; inset: 0; pointer-events: none; }
+
+/* Líneas SVG encima de las notas: borde de la pista y divisores de carriles. */
+.perspective-lines { position: absolute; z-index: 7; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.perspective-lines path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.perspective-lines .track-border { stroke: #50e7f2; stroke-width: 4; opacity: .92; filter: drop-shadow(0 0 5px #50e7f2aa); }
+.stage[data-scenario="me-gustan"] .perspective-lines .track-border { stroke: #ff4db8; filter: drop-shadow(0 0 6px #ff4db8aa); }
+.stage[data-scenario="hazlo-otra-vez"] .perspective-lines .track-border { stroke: #ffd65a; filter: drop-shadow(0 0 6px #ffd65aaa); }
+.perspective-lines .lane-dividers { stroke: #dcd5ed; stroke-width: 2.4; opacity: .76; filter: drop-shadow(0 0 3px #dcd5ed66); }
+
+/* Nota normal: barra con el color de su carril. */
+.note {
+  position: absolute;
+  width: clamp(38px, 4.2cqw, 58px);
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--note-color);
+  border-radius: 4px;
+  background: #10101add;
+  box-shadow: 0 0 9px var(--note-color), inset 0 0 5px color-mix(in srgb, var(--note-color) 25%, transparent);
+}
+
+/* Nota sostenida: cola larga que se consume mientras mantienes la tecla. */
+.note.hold-note {
+  height: var(--hold-length, 72px);
+  transform: translate(-50%, -100%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--note-color) 45%, #10101a), var(--note-color));
+  box-shadow: 0 0 12px var(--note-color), inset 0 0 6px #fff8;
+}
+.note.hold-note.being-held { filter: brightness(1.25); }
+.note.boost-note.hold-note { height: var(--hold-length, 72px); }
+
+/* Nota dorada con estrella: carga la barra de impulso. */
+.note.boost-note {
+  width: clamp(34px, 6cqw, 62px);
+  height: 15px;
+  border: 2px solid #fff1a5;
+  background: #ffd65a;
+  box-shadow: 0 0 12px #ffd65a99, inset 0 0 5px #ffd65a66;
+}
+.note.boost-note::after {
+  content: "★";
+  position: absolute;
+  inset: -5px 0 0;
+  color: #fff;
+  text-align: center;
+  font-size: 13px;
+  line-height: 13px;
+  text-shadow: 0 0 5px #ff9d00;
+}
+
+/* Impulso activo: resplandor dorado en la pista y en la línea de golpe. */
+.stage.boost-active .highway { filter: drop-shadow(0 0 18px #ffd65a99); }
+.stage.boost-active .hit-line {
+  background: linear-gradient(90deg, transparent, #ffd65a, #fff4b0, #ffd65a, transparent);
+  box-shadow: 0 0 18px #ffd65a;
+}
+
+/* Mensaje sobre la pista (empezar, fin de partida). */
+.stage-message {
+  position: absolute;
+  z-index: 8;
+  top: 10px;
+  width: 100%;
+  color: #c9c2d5;
+  text-align: center;
+  line-height: 1.8;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 5px #000;
+  pointer-events: none;
+}
+.stage-message small { font-size: 9px; }
+
+/* Resumen centrado en la pista al terminar el nivel (borde rojo si es derrota). */
+.stage-message.results {
+  top: 50%;
+  left: 50%;
+  width: min(92%, 460px);
+  padding: 16px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  background: #090914ed;
+  color: white;
+  box-shadow: 0 0 24px #50e7f244;
+  line-height: 1.8;
+  pointer-events: auto;
+}
+.stage-message.results.defeat { border-color: #ff687e; box-shadow: 0 0 24px #ff687e55; }
+.replay-level-button {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+  padding: 9px 15px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  background: #29202a;
+  font-weight: 800;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.replay-level-button:hover,
+.replay-level-button:focus-visible {
+  color: #17131a;
+  background: var(--gold);
+  outline: 2px solid #fff2b2;
+  outline-offset: 2px;
+}
+
+/* Aviso para activar el audio cuando el navegador lo bloquea (tiene un botón clicable). */
+.stage-message.audio-prompt {
+  top: 50%;
+  left: 50%;
+  width: min(92%, 380px);
+  padding: 16px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  background: #090914ed;
+  color: white;
+  box-shadow: 0 0 24px #ffd65a44;
+  pointer-events: auto;
+}
+.stage-message.audio-prompt button {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--gold);
+  background: #29202a;
+  color: var(--gold);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   7. Barra de impulso y HUD inferior
+   -------------------------------------------------------------------------- */
+
+/* La barra solo existe visualmente durante una partida de historia activa. */
+.impulse-hud { display: none; position: absolute; z-index: 10; left: 14%; right: 14%; bottom: 210px; }
+body.game-running:not(.practice-mode) .impulse-hud { display: block; }
+body.practice-mode .impulse-hud { display: none; }
+.boost-meter {
+  height: 14px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #ffd65a;
+  background: #0c0b14;
+  box-shadow: 0 0 12px #ffd65a88, 0 0 0 2px #0c0b14;
+  border-radius: 999px;
+}
+.boost-fill {
+  width: 0;
+  height: 100%;
+  background: #ffd65a;
+  box-shadow: 0 0 12px #ffd65a;
+  transition: width .18s ease;
+  border-radius: inherit;
+}
+
+/* Fila bajo la pista: puntos a la izquierda, combo al centro, resultado a la derecha. */
+.power-controls {
+  position: absolute;
+  z-index: 12;
+  left: 2%;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: stretch;
+  width: 96%;
+  height: var(--bottom-hud-height, 154px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.boost-hud {
+  display: grid;
+  height: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 8px 18px;
+  align-items: center;
+  padding: 12px 16px;
+  border: 2px solid var(--cyan);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(105deg, #0d0b18, #211634 55%, #0d0b18);
+  box-shadow: 0 0 7px #50e7f299, inset 0 0 18px #50e7f21a, 0 4px 18px #0005;
+}
+
+/* La puntuación queda fuera del carril, en la esquina inferior izquierda. */
+.points-inline {
+  position: fixed;
+  z-index: 4;
+  left: clamp(20px, 3cqw, 56px);
+  bottom: clamp(78px, 11cqh, 110px);
+  width: min(320px, calc(100cqw - 40px));
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
+}
+.points-inline .stat-label { font-size: 9px; }
+.points-inline > strong { justify-content: center; font-size: clamp(32px, 4.4cqw, 52px); line-height: 1; letter-spacing: 1px; text-shadow: 0 0 14px #50e7f255; }
+
+/* Círculo central con el multiplicador actual. */
+.combo-orb {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: center;
+  width: 94px;
+  height: 94px;
+  align-self: center;
+  transform: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid #a989ffbb;
+  border-radius: 50%;
+  background: radial-gradient(circle, #30285a, #100e1c);
+  box-shadow: 0 0 16px #a989ff55, inset 0 0 15px #50e7f222;
+}
+.combo-orb strong { font-size: 27px; }
+.combo-orb .multiplier { font-size: 24px; }
+
+/* Datos y barra de canción arriba de la puntuación. */
+.song-progress {
+  position: fixed;
+  z-index: 4;
+  left: clamp(20px, 3cqw, 56px);
+  bottom: clamp(145px, 24cqh, 220px);
+  display: grid;
+  gap: 6px;
+  width: min(320px, calc(100cqw - 40px));
+  margin: 0;
+  padding: 5px 9px 7px;
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 8px 8px 0;
+  background: linear-gradient(90deg, #151226e8, #100e1b99);
+}
+.song-progress-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #c9c2d5; font-size: 10px; }
+.song-progress-meta strong { overflow: hidden; color: #fff; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.song-progress-meta span { flex: 0 0 auto; color: #a9a0bd; font-variant-numeric: tabular-nums; }
+.song-progress-bar { height: 8px; overflow: hidden; border: 1px solid #63567d; border-radius: 999px; background: #0a0912; }
+.song-progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #50e7f2, #8f83ff, #ff4db8); box-shadow: 0 0 9px #a989ff99; transition: width .12s linear; }
+
+/* Juicio del golpe fuera del lado derecho de la pista. */
+.judgement-display {
+  position: absolute;
+  z-index: 9;
+  right: -95px;
+  bottom: 164px;
+  width: 95px;
+  min-height: 24px;
+  color: #ffd65a;
+  text-align: center;
+  font-size: clamp(14px, 2cqw, 22px);
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-shadow: none;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* Conteo de aciertos fuera del lado izquierdo, junto a la flecha azul. */
+.combo-count-marker {
+  position: absolute;
+  z-index: 9;
+  left: -95px;
+  bottom: 164px;
+  width: 95px;
+  color: #ffd65a;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 5px #fff2b2, 0 0 13px #ffd65a, 0 0 24px #ff9f43;
+  pointer-events: none;
+}
+
+/* Barra de desempeño y precisión: cambia de color según el nivel (data-level). */
+.performance-status { grid-column: 1; grid-row: 2; width: min(100%, 620px); justify-self: center; }
+.performance-heading { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.performance-heading .stat-label { margin-left: auto; }
+.performance-heading .stat-label:first-child { margin-left: 0; }
+.performance-heading strong { color: var(--cyan); font-size: 11px; font-variant-numeric: tabular-nums; }
+.performance-meter {
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid #60566a;
+  border-radius: 999px;
+  background: #0c0b14;
+}
+.performance-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+  transition: width .2s ease, background-color .2s ease;
+}
+.performance-meter[data-level="medium"] .performance-fill { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+.performance-meter[data-level="low"] .performance-fill { background: #ff687e; box-shadow: 0 0 10px #ff687e; }
+
+/* Al final, el resultado queda visible solo en el recuadro de la pista. */
+body.level-finished .points-inline,
+body.level-finished .judgement-display,
+body.level-finished .combo-count-marker { visibility: hidden; }
+
+/* Botones de partida (el HTML actual ya no los usa). */
+.controls { grid-column: 1 / -1; display: flex; justify-content: center; gap: 9px; }
+.controls button { min-width: 132px; padding: 10px 14px; border: 0; font-weight: bold; cursor: pointer; }
+.controls button:disabled { opacity: .5; cursor: not-allowed; }
+.primary { background: var(--pink); color: #17131a; }
+.secondary { background: #393943; color: white; }
+
+/* --------------------------------------------------------------------------
+   8. Pantallas pequeñas (celular)
+   -------------------------------------------------------------------------- */
+
+/* Todo más compacto; los botones ocupan el ancho disponible. */
+@container (max-width: 650px) {
+  .app { width: calc(100% - 20px); padding-top: 10px; }
+  .topbar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .brand { font-size: clamp(13px, 3.5cqw, 16px); }
+  .page-title { font-size: clamp(11px, 3cqw, 13px); letter-spacing: .8px; }
+  .start-screen { padding: clamp(12px, 4cqw, 24px); }
+  .menu-now-playing { top: 14px; right: 12px; width: min(250px, calc(100cqw - 24px)); padding: 8px 10px; }
+  .menu-now-playing-meta strong { font-size: 11px; }
+  .start-card { width: 100%; padding: clamp(14px, 4cqw, 32px); }
+  .start-card h2 { font-size: clamp(26px, 8cqw, 52px); }
+  .start-menu-buttons button { font-size: clamp(25px, 7cqw, 42px); }
+  .settings-screen { max-height: 88cqh; padding: clamp(14px, 4cqw, 24px); }
+  .settings-header { gap: 8px; margin-bottom: 12px; }
+  .settings-header h2 { font-size: clamp(14px, 4.5cqw, 22px); }
+  .options-menu button { padding: 11px 12px; font-size: clamp(13px, 3.5cqw, 15px); }
+  .game-main { margin-top: 16px; }
+  .game-main { height: calc(100cqh - 100px); min-height: 420px; }
+  .feedback { min-width: 95px; font-size: 9px; }
+  .score-block strong, .combo-block strong { font-size: 20px; }
+  .game-card { width: 100%; }
+  .stage { height: 100%; min-height: 0; aspect-ratio: auto; overflow: visible; }
+  .power-controls { grid-template-columns: 1fr; }
+  .game-main { --bottom-hud-height: 132px; }
+  .power-controls { left: 2%; bottom: 0; width: 96%; height: var(--bottom-hud-height); margin: 0; }
+  .boost-hud { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+  .boost-hud { padding: 9px 8px; }
+  .impulse-hud { left: 18%; right: 18%; bottom: 10%; }
+  .boost-meter { height: 12px; }
+  .combo-orb { grid-column: 1; grid-row: 1; width: 68px; height: 68px; transform: none; }
+  .song-progress { position: fixed; left: 12px; bottom: 188px; z-index: 13; width: min(220px, calc(100cqw - 24px)); margin: 0; }
+  .points-inline { position: fixed; left: 12px; bottom: 132px; z-index: 13; width: auto; margin: 0; text-align: left; }
+  .performance-status { grid-column: 1; grid-row: 2; }
+  .judgement-display { right: -60px; bottom: 130px; width: 58px; font-size: 10px; }
+  .combo-count-marker { left: -60px; bottom: 130px; width: 58px; font-size: 18px; }
+  .hit-line { bottom: 138px; }
+  .receptors { bottom: 124px; }
+  .impulse-hud { bottom: 170px; }
+  .performance-heading { flex-wrap: wrap; }
+  .points-inline > strong { font-size: clamp(26px, 7cqw, 36px); }
+  .controls { grid-column: auto; }
+  .controls button { min-width: 0; flex: 1; }
+}
+
+@container (min-width: 651px) and (max-width: 1200px) {
+  .stage { overflow: visible; }
+  .judgement-display { right: -84px; width: 84px; }
+  .combo-count-marker { left: -84px; width: 84px; }
+}
+
+/* Ajusta la pista a ventanas bajas en horizontal. */
+@container (min-width: 651px) and (max-height: 700px) {
+  .app { padding-top: 4px; }
+  .topbar { min-height: 42px; padding-bottom: 6px; }
+  .game-card { width: min(100%, calc((100cqh - 130px) * 1.25)); }
+  .stage { min-height: 320px; }
+}
+
+/* El marco de referencia es siempre 16:9, así que el fondo no cambia de
+   encuadre con la orientación del monitor. */
+
+.start-card .game-title {
+  font-family: 'neon4', sans-serif !important;
+  font-size: 77px;
+  color: #fff;
+  text-shadow:
+    0 0 5px #fff,
+    0 0 10px #fdfdfd,
+    0 0 25px #ff00aa,
+    0 0 45px #e200d7;
+}
+
+/* El Mimao animado en el menú principal */
+.menu-mimao {
+  position: absolute;
+  z-index: 2;
+  left: 56%;
+  bottom: 5%;
+
+  width: min(32cqw, 400px);
+  aspect-ratio: 256 / 384;
+
+  background-image: url("ART/assets/MIMAOV1Baile.png");
+  background-repeat: no-repeat;
+  background-size: 1600% 100%;
+  background-position: 0 0;
+
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+
+  transform: scaleX(-1);
+}
+
+@container (max-width: 650px) {
+  .menu-mimao {
+    left: auto;
+    right: 2%;
+    bottom: 3%;
+    width: min(42cqw, 230px);
+    opacity: 0.65;
+  }
+}
