@@ -1,0 +1,116 @@
+/* Encabezado de la sección de juegos */
+.games-header {
+  font-size: 13px;
+  color: #ffffff;
+  margin-bottom: 20px;
+  text-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
+}
+
+/* Cuadrícula de 4 columnas como en la imagen */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 768px) {
+  .games-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tarjeta individual */
+.game-card {
+  background-color: #0d1528;
+  border: 2px solid #0077b6;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: #00f3ff;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+}
+
+/* Contenedor de imagen y etiqueta superior */
+.card-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #090d16;
+}
+
+.card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background-color: rgba(11, 7, 18, 0.85);
+  border: 1px solid #00f3ff;
+  color: #ffffff;
+  font-size: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+}
+
+.card-badge span {
+  color: #00f3ff;
+}
+
+/* Cuerpo de la tarjeta y botón */
+.card-body {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  gap: 12px;
+}
+
+.card-title {
+  font-size: 8px;
+  line-height: 1.5;
+  color: #ffffff;
+  margin: 0;
+}
+
+.claim-btn {
+  width: 100%;
+  padding: 9px 6px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #ffffff;
+  background: linear-gradient(180deg, #00a8ff 0%, #0066cc 100%);
+  border: 2px solid #00f3ff;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #003d7a;
+  transition: all 0.1s ease;
+}
+
+.claim-btn:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 3px 0 #003d7a, 0 0 10px #00f3ff;
+}
+
+.claim-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #003d7a;
+}
